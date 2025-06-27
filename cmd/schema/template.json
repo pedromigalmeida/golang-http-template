@@ -1,0 +1,27 @@
+{
+  "TableName": "ddb-ew2-dev-template",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "value",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "id",
+      "KeyType": "HASH"
+    },
+    {
+      "AttributeName": "value",
+      "KeyType": "RANGE"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 100,
+    "WriteCapacityUnits": 50
+  }
+}

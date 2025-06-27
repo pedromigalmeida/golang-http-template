@@ -1,0 +1,77 @@
+version: "3.3"
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      - AWS_REGION=local
+      - AWS_ACCESS_KEY_ID=1
+      - AWS_SECRET_ACCESS_KEY=1
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+    networks:
+      - default
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "127.0.0.1:9001:8001"
+    environment:
+      - AWS_REGION=local
+      - AWS_ACCESS_KEY_ID=1
+      - AWS_SECRET_ACCESS_KEY=1
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - "dynamodb"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    networks:
+      - default
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9001" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  aws-cli-tables:
+    image: amazon/aws-cli
+    volumes:
+      - ./cmd/schema/:/root/script/
+    depends_on:
+      - "dynamodb"
+    environment:
+      - AWS_REGION=local
+      - AWS_ACCESS_KEY_ID=1
+      - AWS_SECRET_ACCESS_KEY=1
+    security_opt:
+      - no-new-privileges:true
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sleep 2
+        aws --endpoint-url=http://dynamodb:8000 dynamodb create-table --cli-input-json file:///root/script/template.json
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    networks:
+      - default
+
+networks:
+  default:
+
